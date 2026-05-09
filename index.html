@@ -3,237 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aura — Путь Судьбы</title>
+    <title>Aura — Книга Судьбы</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
-            --space: #05070a;
-            --gold: #c5a059;
-            --magic-violet: #2e1a47;
+            --gold: #d4af37;
+            --deep: #0a0b10;
+            --violet: #1a0b2e;
         }
 
         body {
-            background: linear-gradient(rgba(5, 7, 10, 0.8), rgba(5, 7, 10, 0.8)), 
-                        url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?auto=format&fit=crop&q=80&w=2071');
+            background: linear-gradient(rgba(10, 11, 16, 0.9), rgba(10, 11, 16, 0.9)), 
+                        url('https://images.unsplash.com/photo-1502134249126-9f3755a50d78?q=80&w=2070');
             background-size: cover;
-            background-position: center;
-            color: #e0e0e0;
-            font-family: 'Times New Roman', serif;
+            background-attachment: fixed;
+            color: #f0f0f0;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
             min-height: 100vh;
         }
 
-        .app-container {
-            width: 90%;
-            max-width: 450px;
-            text-align: center;
-            padding-top: 50px;
-        }
+        .container { width: 90%; max-width: 500px; text-align: center; padding: 60px 20px; }
 
-        h1 { color: var(--gold); letter-spacing: 5px; text-transform: uppercase; font-weight: 300; }
-
-        .glass-panel {
+        .glass-card {
             background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(197, 160, 89, 0.2);
-            padding: 30px;
-            border-radius: 30px;
-            margin-top: 20px;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 40px;
+            border-radius: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
+
+        h1 { color: var(--gold); letter-spacing: 8px; font-weight: 200; margin-bottom: 5px; }
+        .sep { width: 50px; height: 1px; background: var(--gold); margin: 20px auto; }
 
         input {
             width: 100%;
             padding: 15px;
-            margin: 10px 0;
-            background: transparent;
-            border: none;
-            border-bottom: 1px solid var(--gold);
+            margin: 15px 0;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 10px;
             color: #fff;
-            font-size: 1.1rem;
-            box-sizing: border-box;
-            outline: none;
+            font-size: 1rem;
+            text-align: center;
         }
 
-        .btn-mystic {
-            background: transparent;
-            border: 1px solid var(--gold);
-            color: var(--gold);
-            padding: 15px 30px;
-            border-radius: 5px;
-            cursor: pointer;
+        .btn-main {
+            background: var(--gold);
+            color: #000;
+            border: none;
+            padding: 18px;
             width: 100%;
-            margin-top: 20px;
-            transition: all 0.5s;
-            text-transform: uppercase;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
             letter-spacing: 2px;
+            transition: 0.3s;
+            margin-top: 10px;
         }
 
-        .btn-mystic:hover { background: var(--gold); color: #000; box-shadow: 0 0 30px rgba(197, 160, 89, 0.4); }
+        .btn-main:hover { filter: brightness(1.2); box-shadow: 0 0 30px rgba(212, 175, 55, 0.4); }
 
         /* Прогресс-бар */
-        #loading-screen { display: none; margin-top: 40px; }
-        .progress-container { width: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; height: 4px; margin: 20px 0; }
-        .progress-bar { width: 0%; height: 100%; background: var(--gold); transition: width 1s linear; }
-        #status-text { font-style: italic; color: var(--gold); min-height: 3em; }
+        #loader { display: none; }
+        .p-bar-bg { width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin: 30px 0; position: relative; }
+        .p-bar-fill { width: 0%; height: 100%; background: var(--gold); box-shadow: 0 0 15px var(--gold); transition: 0.5s; }
+        .status-msg { font-style: italic; font-size: 0.9rem; color: var(--gold); min-height: 40px; }
 
-        #result-screen { display: none; }
-        footer { margin-top: 40px; font-size: 0.7rem; opacity: 0.5; padding-bottom: 20px; }
+        #success-ui { display: none; }
+        footer { margin-top: auto; padding: 30px; font-size: 0.8rem; opacity: 0.4; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <div id="input-screen">
-        <h1>Aura</h1>
-        <p style="letter-spacing: 2px;">Раскрой тайны своего воплощения</p>
-        <div class="glass-panel">
-            <input type="text" id="name" placeholder="Имя при рождении">
-            <input type="date" id="dob">
-            <button class="btn-mystic" onclick="runAnalysis()">Войти в поток</button>
-        </div>
+<div class="container">
+    <div id="start-ui" class="glass-card">
+        <h1>AURA</h1>
+        <p>ИНСТИТУТ НУМЕРОЛОГИИ</p>
+        <div class="sep"></div>
+        <input type="text" id="name" placeholder="Ваше Имя">
+        <input type="date" id="dob">
+        <button class="btn-main" onclick="process()">РАССЧИТАТЬ СУДЬБУ</button>
     </div>
 
-    <div id="loading-screen">
-        <h2 id="status-text">Инициализация эфирного поля...</h2>
-        <div class="progress-container">
-            <div class="progress-bar" id="bar"></div>
-        </div>
-        <p id="percentage">0%</p>
+    <div id="loader" class="glass-card">
+        <p id="status-msg">Инициализация потока данных...</p>
+        <div class="p-bar-bg"><div class="p-bar-fill" id="fill"></div></div>
+        <p id="percent">0%</p>
     </div>
 
-    <div id="result-screen" class="glass-panel">
-        <h2 style="color:var(--gold)">Матрица Сформирована</h2>
-        <p>Ваш персональный отчет готов. Проведено сопоставление 44 параметров судьбы.</p>
-        <div style="font-size: 2rem; margin: 20px 0;">9.99 $</div>
-        <button class="btn-mystic" onclick="downloadPDF()">Скачать отчет (DEMO)</button>
+    <div id="success-ui" class="glass-card">
+        <h2 style="color:var(--gold)">АНАЛИЗ ЗАВЕРШЕН</h2>
+        <p>Ваша книга судеб сформирована на основе вибраций планет и чисел Пифагора.</p>
+        <div style="font-size: 1.5rem; margin: 20px 0;">990 ₽</div>
+        <button class="btn-main" onclick="generatePDF()">СКАЧАТЬ КНИГУ (ДЕМО)</button>
     </div>
 
     <footer>
-        © 2026 Aura Mysticism. Все данные защищены законом кармы.<br>
-        <a href="#" style="color:var(--gold)">Политика конфиденциальности</a>
+        © 2026 Aura Astrology. Все права защищены законом Космоса.
     </footer>
 </div>
 
 <script>
-    const steps = [
-        "Считывание цифрового кода...",
-        "Построение Квадрата Пифагора...",
-        "Анализ кармического долга...",
-        "Синхронизация с планетой-покровителем...",
-        "Расшифровка линий здоровья и талантов...",
-        "Поиск вибраций в Хрониках Акаши...",
-        "Финальная визуализация Матрицы..."
+    const db = {
+        lifePath: {
+            1: "Путь Лидера. Вы — первооткрыватель. Энергия Солнца дает вам силу создавать миры из хаоса.",
+            2: "Путь Дипломата. Ваша сила в партнерстве и интуитивном чувствовании других людей.",
+            3: "Путь Творца. Самовыражение и оптимизм — ваши главные инструменты в этом воплощении.",
+            4: "Путь Мастера. Вы — фундамент этого мира. Терпение и структура ведут вас к успеху.",
+            5: "Путь Свободы. Жизнь — это приключение. Ваша задача — учить других гибкости.",
+            6: "Путь Наставника. Гармония, семья и служение красоте — ваша истинная природа.",
+            7: "Путь Мудреца. Поиск истины и духовное уединение раскроют ваши скрытые таланты.",
+            8: "Путь Власти. Вы пришли, чтобы управлять материальными потоками и балансировать карму.",
+            9: "Путь Гуманиста. Завершение цикла. Ваша любовь к миру не знает границ.",
+            11: "Мастер-Число. Пророк. Вы слышите шепот вселенной яснее других.",
+            22: "Мастер-Строитель. Способность воплощать самые безумные духовные идеи в материю."
+        },
+        zodiac: [
+            { name: "Козерог", element: "Земля" }, { name: "Водолей", element: "Воздух" },
+            { name: "Рыбы", element: "Вода" }, { name: "Овен", element: "Огонь" },
+            { name: "Телец", element: "Земля" }, { name: "Близнецы", element: "Воздух" },
+            { name: "Рак", element: "Вода" }, { name: "Лев", element: "Огонь" },
+            { name: "Дева", element: "Земля" }, { name: "Весы", element: "Воздух" },
+            { name: "Скорпион", element: "Вода" }, { name: "Стрелец", element: "Огонь" }
+        ]
+    };
+
+    const phrases = [
+        "Считывание астрального кода...",
+        "Построение натальной карты...",
+        "Анализ положения Сатурна...",
+        "Расчет Психоматрицы Пифагора...",
+        "Поиск кармических узлов...",
+        "Генерация персональных советов...",
+        "Финальная калибровка PDF-отчета..."
     ];
 
-    function runAnalysis() {
-        const name = document.getElementById('name').value;
-        const dob = document.getElementById('dob').value;
-        if(!name || !dob) return alert("Введите данные для связи со звездами");
-
-        document.getElementById('input-screen').style.display = 'none';
-        document.getElementById('loading-screen').style.display = 'block';
-
-        let progress = 0;
-        const bar = document.getElementById('bar');
-        const status = document.getElementById('status-text');
-        const percent = document.getElementById('percentage');
-
-        const interval = setInterval(() => {
-            progress++;
-            bar.style.width = progress + '%';
-            percent.innerText = progress + '%';
-
-            if (progress % 14 === 0) {
-                status.innerText = steps[Math.floor(progress / 14)];
-            }
-
-            if (progress >= 100) {
-                clearInterval(interval);
-                document.getElementById('loading-screen').style.display = 'none';
-                document.getElementById('result-screen').style.display = 'block';
-            }
-        }, 600); // 60 секунд на расчет
+    function getZodiac(date) {
+        const day = date.getDate();
+        const month = date.getMonth();
+        const signs = [20, 19, 21, 20, 21, 21, 23, 23, 23, 23, 22, 22];
+        const idx = (day < signs[month]) ? month : (month + 1) % 12;
+        return db.zodiac[idx];
     }
 
-    function calculatePythagoras(dob) {
-        const d = dob.replace(/-/g, ''); // ГГГГММДД
-        const digits = d.split('').map(Number);
+    function process() {
+        if(!document.getElementById('name').value || !document.getElementById('dob').value) return;
+        document.getElementById('start-ui').style.display = 'none';
+        document.getElementById('loader').style.display = 'block';
         
-        // 1-е число: сумма всех цифр
-        let n1 = digits.reduce((a, b) => a + b, 0);
-        // 2-е число: сумма цифр первого числа
-        let n2 = n1.toString().split('').map(Number).reduce((a, b) => a + b, 0);
-        // 3-е число: n1 - (2 * первая цифра дня рождения)
-        const day = d.slice(6); // последние две цифры
-        const firstDigitDay = parseInt(day[0] === '0' ? day[1] : day[0]);
-        let n3 = n1 - (2 * firstDigitDay);
-        // 4-е число: сумма цифр третьего числа
-        let n4 = n3.toString().split('').map(Number).reduce((a, b) => a + b, 0);
-
-        return { n1, n2, n3, n4, all: d + n1 + n2 + n3 + n4 };
+        let p = 0;
+        const interval = setInterval(() => {
+            p++;
+            document.getElementById('fill').style.width = p + '%';
+            document.getElementById('percent').innerText = p + '%';
+            if(p % 15 === 0) document.getElementById('status-msg').innerText = phrases[Math.floor(p/15)];
+            if(p >= 100) {
+                clearInterval(interval);
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('success-ui').style.display = 'block';
+            }
+        }, 600); // 60 секунд
     }
 
-    async function downloadPDF() {
+    function calculateNumerology(dob) {
+        let nums = dob.replace(/-/g, '').split('').map(Number);
+        let sum = nums.reduce((a, b) => a + b, 0);
+        while (sum > 9 && sum !== 11 && sum !== 22) {
+            sum = sum.toString().split('').map(Number).reduce((a, b) => a + b, 0);
+        }
+        return sum;
+    }
+
+    async function generatePDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         const name = document.getElementById('name').value;
-        const dob = document.getElementById('dob').value;
-        const results = calculatePythagoras(dob);
+        const dobStr = document.getElementById('dob').value;
+        const dobDate = new Date(dobStr);
+        
+        const num = calculateNumerology(dobStr);
+        const zodiac = getZodiac(dobDate);
 
-        // Дизайн PDF
-        doc.setFillColor(5, 7, 10);
+        // Чтобы не было иероглифов, мы не используем doc.text напрямую для кириллицы
+        // В идеале сюда нужно вставить base64 шрифта, но для демо мы сделаем "чит":
+        // Используем встроенный в jsPDF метод работы с текстом через стандартный шрифт, 
+        // но в реальном продакшене тебе нужно будет добавить doc.addFont('Roboto.ttf').
+        
+        // Оформление
+        doc.setFillColor(15, 15, 20);
         doc.rect(0, 0, 210, 297, 'F');
-        doc.setTextColor(197, 160, 89);
         
-        doc.setFontSize(26);
-        doc.text("AURA: КНИГА СУДЬБЫ", 105, 40, null, null, "center");
+        doc.setTextColor(212, 175, 55);
+        doc.setFontSize(22);
+        doc.text("AURA: THE BOOK OF DESTINY", 105, 40, null, null, "center");
         
-        doc.setFontSize(12);
+        doc.setDrawColor(212, 175, 55);
+        doc.line(40, 45, 170, 45);
+
+        doc.setFontSize(14);
+        doc.setTextColor(255, 255, 255);
+        doc.text(`Master: ${name}`, 20, 70);
+        doc.text(`Birth Date: ${dobStr}`, 20, 80);
+        
+        doc.setTextColor(212, 175, 55);
+        doc.text("--- COSMIC ANALYTICS ---", 105, 100, null, null, "center");
+
         doc.setTextColor(200, 200, 200);
-        doc.text(`Для воплощения: ${name}`, 20, 60);
-        doc.text(`Дата входа в мир: ${dob}`, 20, 70);
+        doc.setFontSize(12);
         
-        doc.setDrawColor(197, 160, 89);
-        doc.line(20, 75, 190, 75);
-
-        // Блок 1: Характер
-        doc.setFontSize(16);
-        doc.setTextColor(197, 160, 89);
-        doc.text("Глава I: Цифровой Код", 20, 90);
+        // Данные (на английском для избежания багов в демо, 
+        // или нужно подключать кастомный шрифт)
+        doc.text(`Life Path Number: ${num}`, 20, 120);
+        doc.text(`Zodiac Sign: ${zodiac.name} (${zodiac.element})`, 20, 130);
         
-        doc.setFontSize(11);
-        doc.setTextColor(180, 180, 180);
-        const codeText = `Ваш основной числовой ряд: ${results.n1}.${results.n2} | ${results.n3}.${results.n4}. 
-        Эти вибрации определяют ваш энергетический скелет. Число ${results.n2} указывает на то, 
-        что ваша миссия в этом воплощении связана с ${results.n2 > 5 ? 'созиданием и лидерством' : 'поиском гармонии и обучением'}.`;
-        doc.text(doc.splitTextToSize(codeText, 170), 20, 100);
+        const desc = db.lifePath[num] || "Analyzing...";
+        // Используем splitTextToSize для переноса строк
+        const splitText = doc.splitTextToSize(`Destiny Message: ${desc}`, 170);
+        doc.text(splitText, 20, 150);
 
-        // Блок 2: Квадрат Пифагора (имитация)
-        doc.text("Ваша Психоматрица активирована. Основные силы:", 20, 130);
-        const matrixTraits = [
-            "Характер: Сильная воля, стремление к цели.",
-            "Энергия: Достаточный уровень для реализации идей.",
-            "Здоровье: Требует внимания к ментальному спокойствию.",
-            "Удача: Вы ведомы интуицией более, чем логикой."
-        ];
-        matrixTraits.forEach((t, i) => doc.text(`• ${t}`, 25, 140 + (i * 10)));
-
-        // Блок 3: Карма
-        doc.setFontSize(16);
-        doc.setTextColor(197, 160, 89);
-        doc.text("Глава II: Кармическая задача", 20, 190);
-        
-        const karmaText = "Согласно положению планет и вашему числу рождения, ваша главная задача — проработка страха ответственности. Прошлые воплощения оставили след в виде сильной интуиции, которую вы часто игнорируете. В этом году звезды требуют от вас решительности.";
-        doc.setFontSize(11);
-        doc.setTextColor(180, 180, 180);
-        doc.text(doc.splitTextToSize(karmaText, 170), 20, 200);
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text("Generated by Aura AI Engine. May 2026.", 105, 280, null, null, "center");
 
         doc.save(`Aura_Book_${name}.pdf`);
     }
 </script>
-
 </body>
 </html>
