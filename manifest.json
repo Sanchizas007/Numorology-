@@ -1,0 +1,15 @@
+{
+  "short_name": "Aura",
+  "name": "Aura Numerology & Destiny",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2586/2586717.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0b0e14",
+  "background_color": "#0b0e14"
+}
