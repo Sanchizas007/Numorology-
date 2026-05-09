@@ -7,16 +7,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root { --gold: #d4af37; --deep: #0a0b10; }
-        
-        * { box-sizing: border-box; } /* Исправляет выезд блоков за края */
 
+        /* Сброс стилей и фикс "ездящей" верстки */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body {
             background: var(--deep);
+            background-image: radial-gradient(circle at center, #1a1b2e 0%, #0a0b10 100%);
             color: #f0f0f0;
-            font-family: 'Segoe UI', Helvetica, sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
             margin: 0;
             padding: 0;
-            overflow-x: hidden; /* Запрещает горизонтальную прокрутку */
+            overflow-x: hidden;
             display: flex;
             justify-content: center;
             min-height: 100vh;
@@ -24,53 +26,78 @@
 
         .container { 
             width: 100%; 
-            max-width: 500px; 
+            max-width: 480px; 
             padding: 40px 20px;
-            text-align: center; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .glass-card {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(15px);
             border: 1px solid rgba(212, 175, 55, 0.2);
-            padding: 30px;
-            border-radius: 30px;
+            padding: 40px 25px;
+            border-radius: 35px;
             width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
-        h1 { color: var(--gold); letter-spacing: 5px; font-weight: 200; margin-top: 0; }
+        h1 { 
+            color: var(--gold); 
+            letter-spacing: 8px; 
+            font-weight: 200; 
+            margin: 0 0 10px 0;
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            opacity: 0.6;
+            font-size: 0.8rem;
+            letter-spacing: 3px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+        }
 
         input {
             width: 100%; 
-            padding: 15px; 
-            margin: 10px 0; 
+            padding: 18px; 
+            margin: 12px 0; 
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(212, 175, 55, 0.3); 
-            border-radius: 12px; 
+            border-radius: 15px; 
             color: #fff;
-            font-size: 16px; /* Предотвращает зум на iOS */
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
         }
 
+        input:focus { border-color: var(--gold); background: rgba(255,255,255,0.1); }
+
         .btn-main {
-            background: var(--gold); 
-            color: #000; 
-            border: none; 
+            background: var(--gold);
+            color: #000;
+            border: none;
             padding: 20px;
-            width: 100%; 
-            border-radius: 12px; 
-            font-weight: bold; 
+            width: 100%;
+            border-radius: 15px;
+            font-weight: bold;
             cursor: pointer;
             text-transform: uppercase;
             letter-spacing: 2px;
-            margin-top: 15px;
+            margin-top: 20px;
+            transition: 0.3s;
         }
+
+        .btn-main:active { transform: scale(0.98); opacity: 0.8; }
 
         #loader, #success-ui { display: none; }
 
-        .p-bar-bg { width: 100%; height: 4px; background: rgba(255,255,255,0.1); margin: 30px 0; border-radius: 2px; }
+        .p-bar-bg { width: 100%; height: 3px; background: rgba(255,255,255,0.1); margin: 40px 0; border-radius: 10px; }
         .p-bar-fill { width: 0%; height: 100%; background: var(--gold); transition: 0.3s; box-shadow: 0 0 15px var(--gold); }
         
-        .status-msg { min-height: 50px; font-style: italic; color: var(--gold); }
+        .status-text { font-style: italic; color: var(--gold); min-height: 24px; font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -78,140 +105,175 @@
 <div class="container">
     <div id="start-ui" class="glass-card">
         <h1>AURA</h1>
-        <p style="opacity: 0.6;">ИНСТИТУТ НУМЕРОЛОГИИ</p>
-        <input type="text" id="userName" placeholder="Ваше Имя">
+        <div class="subtitle">Институт Нумерологии</div>
+        <input type="text" id="userName" placeholder="Ваше Имя" autocomplete="off">
         <input type="date" id="userDob">
-        <button class="btn-main" onclick="runAnalysis()">Рассчитать судьбу</button>
+        <button class="btn-main" onclick="startAnalysis()">Рассчитать судьбу</button>
     </div>
 
     <div id="loader" class="glass-card">
-        <p id="status-msg">Подключение к эфирному полю...</p>
+        <div class="status-text" id="status-msg">Инициализация потока...</div>
         <div class="p-bar-bg"><div class="p-bar-fill" id="fill"></div></div>
-        <p id="percent">0%</p>
+        <div style="font-size: 1.2rem; color: var(--gold)" id="percent">0%</div>
     </div>
 
     <div id="success-ui" class="glass-card">
-        <h2 style="color:var(--gold)">Книга сформирована</h2>
-        <p>Ваша персональная расшифровка готова к выгрузке (6 страниц).</p>
-        <button class="btn-main" onclick="downloadReport()">Скачать PDF</button>
+        <h2 style="color:var(--gold)">АНАЛИЗ ЗАВЕРШЕН</h2>
+        <p style="line-height: 1.6; opacity: 0.8;">Ваша персональная «Книга Судеб» сформирована. Отчет содержит 6 страниц глубокой аналитики вашей матрицы.</p>
+        <button class="btn-main" onclick="generateDetailedPDF()">Скачать книгу (.PDF)</button>
     </div>
 </div>
 
 <script>
-    function runAnalysis() {
+    // 1. Функция конвертации локального файла шрифта в Base64
+    async function getFontBase64() {
+        try {
+            const response = await fetch('Roboto-Regular.ttf');
+            const blob = await response.blob();
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                reader.readAsDataURL(blob);
+            });
+        } catch (e) {
+            console.error("Шрифт не найден. Убедитесь, что Roboto-Regular.ttf в корневой папке.");
+            return null;
+        }
+    }
+
+    // 2. Логика прогресс-бара
+    function startAnalysis() {
         const name = document.getElementById('userName').value;
         const dob = document.getElementById('userDob').value;
-        if (!name || !dob) return alert("Заполните поля");
+        if (!name || !dob) return alert("Пожалуйста, заполните данные");
 
         document.getElementById('start-ui').style.display = 'none';
         document.getElementById('loader').style.display = 'block';
 
-        let progress = 0;
+        let p = 0;
         const phrases = [
-            "Анализ вибраций числа рождения...",
-            "Расчет векторов Психоматрицы...",
-            "Построение графиков судьбы и воли...",
-            "Синхронизация с планетарными периодами...",
+            "Считывание числовых вибраций...",
+            "Построение Психоматрицы...",
+            "Анализ кармических узлов...",
+            "Расчет периодов реализации...",
             "Генерация текстовых модулей..."
         ];
 
         const interval = setInterval(() => {
-            progress += 1;
-            document.getElementById('fill').style.width = progress + '%';
-            document.getElementById('percent').innerText = progress + '%';
-            if (progress % 20 === 0) document.getElementById('status-msg').innerText = phrases[progress/20 - 1];
-            
-            if (progress >= 100) {
+            p++;
+            document.getElementById('fill').style.width = p + '%';
+            document.getElementById('percent').innerText = p + '%';
+            if (p % 20 === 0) document.getElementById('status-msg').innerText = phrases[Math.floor(p/20)-1];
+            if (p >= 100) {
                 clearInterval(interval);
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('success-ui').style.display = 'block';
             }
-        }, 150); // Ускорил для теста до 15 сек.
+        }, 80); 
     }
 
-    async function downloadReport() {
+    // 3. Основная функция генерации PDF
+    async function generateDetailedPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         const name = document.getElementById('userName').value;
         const dob = document.getElementById('userDob').value;
 
-        // ВАЖНО: Для кириллицы без внедрения файла шрифта используем стандартный способ через canvas или 
-        // имитацию. Для этого кода я использую стандартный шрифт, но с принудительным переключением на 
-        // системный UTF-8. Если на Render кириллица все еще будет сбоить, нужно внедрить Base64 Roboto.
+        // Внедрение шрифта для кириллицы
+        const fontData = await getFontBase64();
+        if (fontData) {
+            doc.addFileToVFS("Roboto-Regular.ttf", fontData);
+            doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+            doc.setFont("Roboto");
+        }
 
-        const addTitle = (text) => {
-            doc.setFontSize(22);
+        const addHeader = (title) => {
+            doc.setFillColor(10, 11, 16);
+            doc.rect(0, 0, 210, 40, 'F');
             doc.setTextColor(212, 175, 55);
-            doc.text(text, 105, 30, null, null, "center");
-            doc.setDrawColor(212, 175, 55);
-            doc.line(20, 35, 190, 35);
+            doc.setFontSize(22);
+            doc.text(title, 105, 25, null, null, "center");
+        };
+
+        const addText = (text, y) => {
+            doc.setTextColor(40);
+            doc.setFontSize(12);
+            const lines = doc.splitTextToSize(text, 170);
+            doc.text(lines, 20, y);
+            return y + (lines.length * 7);
         };
 
         // --- СТРАНИЦА 1: ТИТУЛ ---
         doc.setFillColor(10, 11, 16);
         doc.rect(0, 0, 210, 297, 'F');
         doc.setTextColor(212, 175, 55);
-        doc.setFontSize(45);
+        doc.setFontSize(50);
         doc.text("AURA", 105, 100, null, null, "center");
-        doc.setFontSize(16);
-        doc.text("KNIGA SUDBY", 105, 120, null, null, "center");
+        doc.setFontSize(18);
+        doc.text("КНИГА ВАШЕЙ СУДЬБЫ", 105, 120, null, null, "center");
         doc.setTextColor(255, 255, 255);
+        doc.setFontSize(24);
         doc.text(name.toUpperCase(), 105, 150, null, null, "center");
         doc.setFontSize(10);
-        doc.text("PERSONAL NUMEROLOGY REPORT 2026", 105, 270, null, null, "center");
+        doc.setTextColor(150);
+        doc.text("ПЕРСОНАЛЬНЫЙ НУМЕРОЛОГИЧЕСКИЙ ОТЧЕТ", 105, 270, null, null, "center");
 
-        // --- СТРАНИЦА 2: ВВЕДЕНИЕ (БОЛЬШОЙ БЛОК) ---
+        // --- СТРАНИЦА 2: ВВЕДЕНИЕ ---
         doc.addPage();
-        addTitle("GLAVA 1. ENERGETIKA");
+        addHeader("ГЛАВА 1. ЭНЕРГИЯ РОЖДЕНИЯ");
+        let y = 60;
+        y = addText(`Ваша дата рождения — ${dob} — является не просто набором цифр, а зашифрованным кодом вашей личности. В момент вашего появления на свет планеты и числа сформировали уникальный энергетический отпечаток.`, y + 10);
+        y = addText("Нумерология позволяет заглянуть за ширму повседневности и увидеть те механизмы, которые управляют вашими реакциями, выбором партнеров и карьерным путем. Данный отчет разбит на ключевые сектора: от базового характера до кармических задач, которые ваша душа выбрала для проработки в этом воплощении.", y + 10);
+        y = addText("Изучайте эти знания не как догму, а как инструмент. Вы обладаете свободной волей, и знание своих врожденных настроек дает вам преимущество в управлении собственной реальностью.", y + 10);
+
+        // --- СТРАНИЦА 3: ПСИХОМАТРИЦА (ТАБЛИЦА) ---
+        doc.addPage();
+        addHeader("ГЛАВА 2. КВАДРАТ ПИФАГОРА");
         doc.setTextColor(0);
-        doc.setFontSize(12);
-        const introText = `Vash den rozhdeniya ${dob} opredelyaet vashu karmicheskuyu zadachu. My proanalizirovali polozhenie chisel i vyyavili vashu unikalnuyu matrixu. Eto ne prosto numerologiya, eto energeticheskiy pasport, kotoryy pokazyvaet vashi silnye i slabye storony, a takzhe vashu missiyu v tekushchem voploshchenii. Dannyy otchet pomozhet vam vyyti na novyy uroven osoznannosti.`;
-        doc.text(doc.splitTextToSize(introText, 170), 20, 50);
-
-        // --- СТРАНИЦА 3: ПСИХОМАТРИЦА (ТАБЛИЦА НА ВСЮ СТРАНИЦУ) ---
-        doc.addPage();
-        addTitle("GLAVA 2. MATRIXA PIFAGORA");
+        doc.text("Ваша врожденная психоматрица (распределение потенциала):", 20, 55);
+        
+        const s = 45; 
+        doc.setDrawColor(212, 175, 55);
         doc.setLineWidth(0.5);
-        // Рисуем большую таблицу
-        const startY = 50;
-        const cellSize = 50;
         for(let i=0; i<3; i++) {
-            for(let j=0; j<3; j++) {
-                doc.rect(30 + j*cellSize, startY + i*cellSize, cellSize, cellSize);
-            }
+            for(let j=0; j<3; j++) doc.rect(37 + j*s, 70 + i*s, s, s);
         }
-        doc.setFontSize(14);
-        doc.text("111", 55, 75); doc.text("4", 105, 75); doc.text("7", 155, 75);
-        doc.text("22", 55, 125); doc.text("55", 105, 125); doc.text("8", 155, 125);
-        doc.text("3", 55, 175); doc.text("6", 105, 175); doc.text("99", 155, 175);
+        doc.setFontSize(16);
+        doc.text("111", 55, 95); doc.text("4", 100, 95); doc.text("77", 145, 95);
+        doc.text("22", 55, 140); doc.text("5", 100, 140); doc.text("8", 145, 140);
+        doc.text("3", 55, 185); doc.text("6", 100, 185); doc.text("99", 145, 185);
+
         doc.setFontSize(10);
-        doc.text("Vasha matrixa sbalansirovana. Silnaya liniya voli i semyi.", 105, 220, null, null, "center");
+        doc.text("Таблица отображает баланс качеств: воля, энергия, интуиция, здоровье и талант.", 105, 230, null, null, "center");
 
-        // --- СТРАНИЦА 4: РАСШИФРОВКА ХАРАКТЕРА ---
+        // --- СТРАНИЦА 4: РАСШИФРОВКА ЛИЧНОСТИ ---
         doc.addPage();
-        addTitle("GLAVA 3. CHARACTER");
-        const charText = "Vy obladaete moshchnym vnutrennim sterzhnem. Vasha energiya napravlena na sozidanie i pomoshch okruzhayushchim. Odnako, sleduet obratit vnimanie na izlishnyuyu samokritiku, kotoraya mozhet tormozit vash progress. V 2026 godu vashi vibratsii budut natseleny na materialnoe blagopoluchie i ukreplenie lichnykh granits. Budte vnimatelny k intuitivnym podskazkam, tak kak vash kanal svyazi s vysshimi silami seychas maksimalno otkryt.";
-        doc.text(doc.splitTextToSize(charText, 170), 20, 50);
+        addHeader("ГЛАВА 3. ПОТЕНЦИАЛ ДУШИ");
+        y = 60;
+        y = addText("Ваш психологический профиль указывает на преобладание творческой энергии над рутинным исполнением. Вы человек идеи, способный видеть возможности там, где другие видят препятствия. Числа в вашей матрице говорят о том, что для вас крайне важно признание ваших заслуг социумом.", y + 10);
+        y = addText("Слабые стороны могут проявляться в периоды энергетических спадов, когда вы склонны к излишней самокритике. Ваша задача — научиться делегировать мелкие задачи и фокусироваться на масштабных целях. Ваша интуиция является вашим главным компасом: если логика говорит одно, а внутреннее чувство другое — доверяйте чувству.", y + 10);
 
-        // --- СТРАНИЦА 5: KARMA ---
+        // --- СТРАНИЦА 5: КАРМА И ЗАДАЧИ ---
         doc.addPage();
-        addTitle("GLAVA 4. KARMA");
-        const karmaText = "Vash karmicheskiy uzel svyazan s vzaimodeystviem s lyudmi. V proshlykh zhiznyakh vy nakopili opyt odinochestva, poetomu seychas vam vazhno nauchitsya rabotat v komande. Vash glavnyy urok — prinyatie drugikh bez zhelaniya ikh peredelat. Realizatsiya etoy zadachi prineset vam ne tolko dushevnyy pokoy, no i neozhidannye finansovye vozmozhnosti v blizhayshie tri goda.";
-        doc.text(doc.splitTextToSize(karmaText, 170), 20, 50);
+        addHeader("ГЛАВА 4. КАРМИЧЕСКИЕ ЗАДАЧИ");
+        y = 60;
+        y = addText("Кармический долг в вашей матрице связан с темой ответственности. Возможно, в прошлых воплощениях вы избегали принятия важных решений, поэтому в текущей жизни ситуации будут заставлять вас брать на себя роль лидера.", y + 10);
+        y = addText("Проработка этого узла принесет вам колоссальный приток материальной энергии. Как только вы перестанете бояться ответственности за других, финансовые каналы откроются в полную силу. 2026 год станет идеальным временем для того, чтобы заявить о себе и начать проект, который вы долго откладывали.", y + 10);
 
-        // --- СТРАНИЦА 6: SOVETY ---
+        // --- СТРАНИЦА 6: ЗАКЛЮЧЕНИЕ ---
         doc.addPage();
-        addTitle("ZAKLYUCHENIE");
-        doc.setFontSize(14);
-        doc.text("Vashi rekomendatsii:", 20, 50);
-        doc.setFontSize(11);
-        doc.text("- Fokusiruytes na svoikh istinnykh zhelaniyakh.", 20, 65);
-        doc.text("- Ispolzuyte sinie i zolotye tsveta v odezhde dlya usileniya energii.", 20, 75);
-        doc.text("- Vremya dlya starta novykh proektov: avgust 2026.", 20, 85);
-        doc.text("- Vash kamen-talisman: Sapfir.", 20, 95);
+        addHeader("ЭПИЛОГ");
+        y = 60;
+        y = addText("Этот отчет — лишь начало вашего пути к самопознанию. Нумерология дает карту, но маршрут выбираете вы. Мы рекомендуем перечитывать эти строки в моменты сомнений, чтобы напомнить себе о той огромной силе, которая заложена в вас с первого вздоха.", y + 10);
+        y = addText("Помните: звезды лишь предполагают, но человек, знающий свою природу, способен изменить любой предначертанный сценарий. Мы желаем вам гармонии и процветания на вашем уникальном жизненном пути.", y + 10);
+        
+        doc.setTextColor(212, 175, 55);
+        doc.setFontSize(16);
+        doc.text("СВЕТА ВАШЕМУ ПУТИ", 105, 200, null, null, "center");
 
-        doc.save(`Aura_Report_${name}.pdf`);
+        doc.save(`Aura_Book_${name}.pdf`);
     }
 </script>
+
 </body>
 </html>
