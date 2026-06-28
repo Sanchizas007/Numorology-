@@ -5,15 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Aura — Книга Судьбы</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="font-data.js"></script>
     <style>
         :root { --gold: #d4af37; --deep: #0a0b10; }
 
         /* Сброс стилей и фикс "ездящей" верстки */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
+
+        html, body { height: 100%; }
+
         body {
-            background: var(--deep);
-            background-image: radial-gradient(circle at center, #1a1b2e 0%, #0a0b10 100%);
+            background: #05040a;
             color: #f0f0f0;
             font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
             margin: 0;
@@ -21,12 +23,85 @@
             overflow-x: hidden;
             display: flex;
             justify-content: center;
+            align-items: center;
             min-height: 100vh;
+            position: relative;
         }
 
-        .container { 
-            width: 100%; 
-            max-width: 480px; 
+        /* ===== Мистический фон ===== */
+        .mystic-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 18% 15%, rgba(150, 70, 220, 0.30), transparent 42%),
+                radial-gradient(circle at 85% 20%, rgba(50, 90, 200, 0.22), transparent 45%),
+                radial-gradient(circle at 50% 90%, rgba(212, 175, 55, 0.10), transparent 50%),
+                radial-gradient(circle at center, #1a1230 0%, #05040a 70%);
+        }
+
+        .mystic-bg .stars {
+            position: absolute;
+            inset: -50%;
+            width: 200%;
+            height: 200%;
+            background-repeat: repeat;
+            opacity: 0.7;
+        }
+        .mystic-bg .stars.layer1 {
+            background-image:
+                radial-gradient(1.4px 1.4px at 10% 20%, #fff, transparent),
+                radial-gradient(1px 1px at 80% 10%, #fff, transparent),
+                radial-gradient(1px 1px at 35% 65%, #fff, transparent),
+                radial-gradient(1.6px 1.6px at 60% 80%, #fff, transparent),
+                radial-gradient(1px 1px at 90% 75%, #fff, transparent),
+                radial-gradient(1px 1px at 15% 90%, #fff, transparent);
+            background-size: 260px 260px;
+            animation: twinkle 5s ease-in-out infinite alternate;
+        }
+        .mystic-bg .stars.layer2 {
+            background-image:
+                radial-gradient(1px 1px at 25% 35%, rgba(212,175,55,0.9), transparent),
+                radial-gradient(1px 1px at 70% 55%, #fff, transparent),
+                radial-gradient(1.2px 1.2px at 45% 12%, #fff, transparent),
+                radial-gradient(1px 1px at 5% 60%, #fff, transparent),
+                radial-gradient(1px 1px at 95% 40%, #fff, transparent);
+            background-size: 340px 340px;
+            animation: twinkle 7s ease-in-out infinite alternate-reverse;
+        }
+        @keyframes twinkle { from { opacity: 0.25; } to { opacity: 0.85; } }
+
+        .mystic-bg .mandala {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 760px;
+            height: 760px;
+            transform: translate(-50%, -50%);
+            opacity: 0.16;
+            animation: spin 220s linear infinite;
+        }
+        @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+        .mystic-bg .moon {
+            position: absolute;
+            top: 8%;
+            right: 12%;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #fdf6e3, #d4af37 70%, #8a6d1f 100%);
+            box-shadow: 0 0 60px 10px rgba(212, 175, 55, 0.35);
+            opacity: 0.5;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 480px;
             padding: 40px 20px;
             display: flex;
             flex-direction: column;
@@ -34,14 +109,14 @@
         }
 
         .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(212, 175, 55, 0.2);
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(18px);
+            border: 1px solid rgba(212, 175, 55, 0.25);
             padding: 40px 25px;
             border-radius: 35px;
             width: 100%;
             text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(120, 70, 200, 0.08);
         }
 
         h1 { 
@@ -95,12 +170,45 @@
         #loader, #success-ui { display: none; }
 
         .p-bar-bg { width: 100%; height: 3px; background: rgba(255,255,255,0.1); margin: 40px 0; border-radius: 10px; }
-        .p-bar-fill { width: 0%; height: 100%; background: var(--gold); transition: 0.3s; box-shadow: 0 0 15px var(--gold); }
-        
+        .p-bar-fill { width: 0%; height: 100%; background: var(--gold); transition: width 0.15s linear; box-shadow: 0 0 15px var(--gold); }
+        .p-bar-fill.calculating { animation: pulse-calc 0.6s ease-in-out infinite; }
+        @keyframes pulse-calc {
+            0%, 100% { box-shadow: 0 0 15px var(--gold); }
+            50% { box-shadow: 0 0 30px 6px var(--gold); }
+        }
+
         .status-text { font-style: italic; color: var(--gold); min-height: 24px; font-size: 0.9rem; }
     </style>
 </head>
 <body>
+
+<div class="mystic-bg">
+    <div class="stars layer1"></div>
+    <div class="stars layer2"></div>
+    <div class="moon"></div>
+    <svg class="mandala" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+        <g fill="none" stroke="#d4af37" stroke-width="0.8">
+            <circle cx="300" cy="300" r="280"/>
+            <circle cx="300" cy="300" r="220"/>
+            <circle cx="300" cy="300" r="160"/>
+            <circle cx="300" cy="300" r="100"/>
+            <g>
+                <circle cx="300" cy="160" r="100"/>
+                <circle cx="300" cy="440" r="100"/>
+                <circle cx="160" cy="230" r="100"/>
+                <circle cx="160" cy="370" r="100"/>
+                <circle cx="440" cy="230" r="100"/>
+                <circle cx="440" cy="370" r="100"/>
+            </g>
+            <g stroke-width="0.5">
+                <line x1="300" y1="20" x2="300" y2="580"/>
+                <line x1="20" y1="300" x2="580" y2="300"/>
+                <line x1="90" y1="90" x2="510" y2="510"/>
+                <line x1="90" y1="510" x2="510" y2="90"/>
+            </g>
+        </g>
+    </svg>
+</div>
 
 <div class="container">
     <div id="start-ui" class="glass-card">
@@ -125,9 +233,149 @@
 </div>
 
 <script>
-    // 1. Функция конвертации локального файла шрифта в Base64
+    // ===================== НУМЕРОЛОГИЧЕСКИЙ ДВИЖОК =====================
+    // Расчёты на основе классической пифагорейской нумерологии
+    // и метода психоматрицы Александрова (адаптация для кириллицы).
+    const NumEngine = (() => {
+        const LETTER_VALUES = {
+            'А':1,'Б':2,'В':3,'Г':4,'Д':5,'Е':6,'Ё':7,'Ж':8,'З':9,
+            'И':1,'Й':2,'К':3,'Л':4,'М':5,'Н':6,'О':7,'П':8,'Р':9,
+            'С':1,'Т':2,'У':3,'Ф':4,'Х':5,'Ц':6,'Ч':7,'Ш':8,'Щ':9,
+            'Ь':1,'Ы':2,'Ъ':3,'Э':4,'Ю':5,'Я':6
+        };
+        const VOWELS = ['А','Е','Ё','И','О','У','Ы','Э','Ю','Я'];
+
+        const ARCHETYPES = {
+            1:  { keyword: "независимость и лидерство", trait: "сильная воля, инициативность, стремление быть первым" },
+            2:  { keyword: "гармонию и партнёрство", trait: "чуткость, дипломатичность, потребность в сотрудничестве" },
+            3:  { keyword: "творчество и самовыражение", trait: "оптимизм, общительность, артистичность" },
+            4:  { keyword: "стабильность и порядок", trait: "практичность, дисциплина, надёжность" },
+            5:  { keyword: "свободу и перемены", trait: "любопытство, гибкость, тяга к новому" },
+            6:  { keyword: "заботу и ответственность", trait: "чувство долга, преданность близким, эстетический вкус" },
+            7:  { keyword: "познание и анализ", trait: "склонность к размышлению, интуиция, любовь к одиночеству" },
+            8:  { keyword: "власть и материальный успех", trait: "целеустремлённость, деловая хватка, организаторские способности" },
+            9:  { keyword: "служение и сострадание", trait: "широта взглядов, гуманизм, эмоциональная глубина" },
+            11: { keyword: "духовное вдохновение", trait: "повышенная интуиция, чувствительность, дар наставничества", master: true },
+            22: { keyword: "масштабное созидание", trait: "способность воплощать грандиозные идеи в материальном мире", master: true },
+            33: { keyword: "безусловную любовь", trait: "целительский дар и ответственность за судьбы других людей", master: true }
+        };
+
+        const KARMIC = {
+            13: "Кармический долг 13/4 — урок трудолюбия. В прошлых воплощениях избегали систематического труда; в этой жизни важно доводить начатое до конца, не искать лёгких путей.",
+            14: "Кармический долг 14/5 — урок умеренности. Склонность к злоупотреблениям и зависимостям требует осознанного контроля над свободой и переменами.",
+            16: "Кармический долг 16/7 — урок смирения эго. Через испытания и периоды одиночества приходит глубинная духовная трансформация.",
+            19: "Кармический долг 19/1 — урок самостоятельности. Важно научиться опираться на себя, не используя других для достижения собственных целей."
+        };
+
+        const MATRIX_QUALITIES = {
+            1: "Характер (воля)",
+            2: "Энергетика (биоэнергетика)",
+            3: "Заинтересованность (чувство долга к делу)",
+            4: "Здоровье",
+            5: "Интуиция / Логика",
+            6: "Труд (трудолюбие)",
+            7: "Удачливость",
+            8: "Чувство долга (ответственность)",
+            9: "Память (интеллект)"
+        };
+
+        function sumDigits(str) {
+            return String(str).split('').filter(c => /\d/.test(c)).reduce((s, c) => s + Number(c), 0);
+        }
+
+        function isMaster(n) { return n === 11 || n === 22 || n === 33; }
+        function isKarmicDebt(n) { return n === 13 || n === 14 || n === 16 || n === 19; }
+
+        // Сводит число к 1-9, сохраняя мастер-числа, и фиксирует кармический долг,
+        // если он встретился на первом шаге свёртки (классическое правило).
+        function reduceWithFlags(n) {
+            const original = n;
+            const karmic = isKarmicDebt(original) ? original : null;
+            while (n > 9 && !isMaster(n)) {
+                n = sumDigits(String(n));
+            }
+            return { value: n, karmic, master: isMaster(n) ? n : null };
+        }
+
+        function lifePath(dob) {
+            const digits = dob.replace(/\D/g, '');
+            return reduceWithFlags(sumDigits(digits));
+        }
+
+        // Психоматрица (квадрат Пифагора), метод Александрова
+        function square(dob) {
+            const digits = dob.replace(/\D/g, ''); // например 19940523
+            const firstDigit = Number(digits[0]);
+            const firstNumber = sumDigits(digits);
+            const secondNumber = sumDigits(String(firstNumber));
+            const thirdNumber = Math.abs(firstNumber - 2 * firstDigit);
+            const fourthNumber = sumDigits(String(thirdNumber));
+
+            const workingDigits = (digits + firstNumber + secondNumber + thirdNumber + fourthNumber);
+            const counts = {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0};
+            for (const ch of String(workingDigits)) {
+                if (ch >= '1' && ch <= '9') counts[Number(ch)]++;
+            }
+            return { counts, firstNumber, secondNumber, thirdNumber, fourthNumber };
+        }
+
+        function nameNumbers(fullName) {
+            const letters = (fullName || '').toUpperCase().replace(/[^А-ЯЁ]/g, '').split('');
+            const vowels = letters.filter(l => VOWELS.includes(l));
+            const consonants = letters.filter(l => !VOWELS.includes(l));
+            const soulSum = vowels.reduce((s, l) => s + (LETTER_VALUES[l] || 0), 0);
+            const personalitySum = consonants.reduce((s, l) => s + (LETTER_VALUES[l] || 0), 0);
+            return {
+                soul: reduceWithFlags(soulSum),
+                personality: reduceWithFlags(personalitySum),
+                destiny: reduceWithFlags(soulSum + personalitySum)
+            };
+        }
+
+        function personalYear(dob, year) {
+            const [, m, d] = dob.split('-').map(Number);
+            const total = sumDigits(String(d)) + sumDigits(String(m)) + sumDigits(String(year));
+            return reduceWithFlags(total);
+        }
+
+        function describe(category, n) {
+            const a = ARCHETYPES[n];
+            if (!a) return '';
+            const templates = {
+                lifePath: `Число Жизненного Пути ${n}${a.master ? ' (мастер-число)' : ''} говорит о том, что ваш путь связан с ${a.keyword}. Ключевые черты: ${a.trait}.`,
+                soul: `Число Души ${n} раскрывает ваши внутренние стремления — подсознательно вас тянет к ${a.keyword}. Внутри вы цените: ${a.trait}.`,
+                personality: `Число Личности ${n} — это то, что видят окружающие при первой встрече с вами: ${a.trait}. Внешне вы производите впечатление человека, тянущегося к ${a.keyword}.`,
+                destiny: `Число Судьбы ${n} указывает на ваше предназначение — реализацию темы «${a.keyword}» на протяжении всей жизни. Задача: развивать качества — ${a.trait}.`,
+                personalYear: `Этот год несёт тему «${a.keyword}». Опирайтесь на качества: ${a.trait}.`
+            };
+            return templates[category] || '';
+        }
+
+        function matrixLevelText(count) {
+            if (count === 0) return "качество отсутствует в матрице — оно не дано от рождения и требует осознанного развития через жизненный опыт.";
+            if (count === 1) return "качество выражено слабо, ниже среднего уровня.";
+            if (count <= 3) return "качество выражено в пределах нормы — это сбалансированный, комфортный уровень.";
+            return "качество выражено очень сильно и может доминировать в характере, иногда даже избыточно.";
+        }
+
+        function matrixLevelWord(count) {
+            if (count === 0) return "отсутствует";
+            if (count === 1) return "слабо выражено";
+            if (count <= 3) return "норма";
+            return "сильно выражено";
+        }
+
+        function karmicText(n) { return KARMIC[n] || null; }
+
+        return { lifePath, square, nameNumbers, personalYear, describe, matrixLevelText, matrixLevelWord, karmicText, MATRIX_QUALITIES };
+    })();
+
+    // 1. Шрифт встроен напрямую как base64 (font-data.js), чтобы PDF
+    // с кириллицей работал и при открытии файла напрямую (file://),
+    // без зависимости от fetch (который блокируется CORS на file://).
     async function getFontBase64() {
         try {
+            if (typeof ROBOTO_FONT_BASE64 !== 'undefined') return ROBOTO_FONT_BASE64;
             const response = await fetch('Roboto-Regular.ttf');
             const blob = await response.blob();
             return new Promise((resolve) => {
@@ -159,17 +407,35 @@
             "Генерация текстовых модулей..."
         ];
 
-        const interval = setInterval(() => {
+        // Точки, на которых прогресс "застревает", будто идет настоящая калькуляция
+        const pausePoints = { 17: 650, 33: 900, 52: 750, 68: 1100, 84: 700, 96: 1300 };
+
+        const fillEl = document.getElementById('fill');
+        const percentEl = document.getElementById('percent');
+        const statusEl = document.getElementById('status-msg');
+
+        function tick() {
             p++;
-            document.getElementById('fill').style.width = p + '%';
-            document.getElementById('percent').innerText = p + '%';
-            if (p % 20 === 0) document.getElementById('status-msg').innerText = phrases[Math.floor(p/20)-1];
+            fillEl.style.width = p + '%';
+            percentEl.innerText = p + '%';
+            if (p % 20 === 0) statusEl.innerText = phrases[Math.floor(p / 20) - 1];
+
             if (p >= 100) {
-                clearInterval(interval);
+                fillEl.classList.remove('calculating');
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('success-ui').style.display = 'block';
+                return;
             }
-        }, 80); 
+
+            const pause = pausePoints[p];
+            if (pause) {
+                fillEl.classList.add('calculating');
+                setTimeout(() => { fillEl.classList.remove('calculating'); tick(); }, pause);
+            } else {
+                setTimeout(tick, 55);
+            }
+        }
+        tick();
     }
 
     // 3. Основная функция генерации PDF
@@ -186,6 +452,15 @@
             doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
             doc.setFont("Roboto");
         }
+
+        // Расчёт реальных нумерологических показателей
+        const currentYear = new Date().getFullYear();
+        const lp = NumEngine.lifePath(dob);
+        const sq = NumEngine.square(dob);
+        const nn = NumEngine.nameNumbers(name);
+        const py = NumEngine.personalYear(dob, currentYear);
+        const karmicNumbers = [lp.karmic, nn.soul.karmic, nn.personality.karmic, nn.destiny.karmic]
+            .filter(Boolean);
 
         const addHeader = (title) => {
             doc.setFillColor(10, 11, 16);
@@ -218,58 +493,112 @@
         doc.setTextColor(150);
         doc.text("ПЕРСОНАЛЬНЫЙ НУМЕРОЛОГИЧЕСКИЙ ОТЧЕТ", 105, 270, null, null, "center");
 
-        // --- СТРАНИЦА 2: ВВЕДЕНИЕ ---
+        // --- СТРАНИЦА 2: ВВЕДЕНИЕ + ЧИСЛО ЖИЗНЕННОГО ПУТИ ---
         doc.addPage();
         addHeader("ГЛАВА 1. ЭНЕРГИЯ РОЖДЕНИЯ");
         let y = 60;
-        y = addText(`Ваша дата рождения — ${dob} — является не просто набором цифр, а зашифрованным кодом вашей личности. В момент вашего появления на свет планеты и числа сформировали уникальный энергетический отпечаток.`, y + 10);
-        y = addText("Нумерология позволяет заглянуть за ширму повседневности и увидеть те механизмы, которые управляют вашими реакциями, выбором партнеров и карьерным путем. Данный отчет разбит на ключевые сектора: от базового характера до кармических задач, которые ваша душа выбрала для проработки в этом воплощении.", y + 10);
-        y = addText("Изучайте эти знания не как догму, а как инструмент. Вы обладаете свободной волей, и знание своих врожденных настроек дает вам преимущество в управлении собственной реальностью.", y + 10);
+        y = addText(`Ваша дата рождения — ${dob} — является не просто набором цифр, а зашифрованным кодом вашей личности. В момент вашего появления на свет числа сформировали уникальный энергетический отпечаток.`, y + 10);
+        doc.setTextColor(212, 175, 55);
+        doc.setFontSize(14);
+        doc.text(`ЧИСЛО ЖИЗНЕННОГО ПУТИ: ${lp.value}`, 105, y + 12, null, null, "center");
+        y = addText(NumEngine.describe('lifePath', lp.value), y + 24);
+        y = addText("Данный отчет разбит на ключевые сектора: от психоматрицы и черт характера до кармических задач, которые ваша душа выбрала для проработки в этом воплощении.", y + 10);
 
-        // --- СТРАНИЦА 3: ПСИХОМАТРИЦА (ТАБЛИЦА) ---
+        // --- СТРАНИЦА 3: ПСИХОМАТРИЦА (ТАБЛИЦА АЛЕКСАНДРОВА) ---
         doc.addPage();
         addHeader("ГЛАВА 2. КВАДРАТ ПИФАГОРА");
         doc.setTextColor(0);
-        doc.text("Ваша врожденная психоматрица (распределение потенциала):", 20, 55);
-        
-        const s = 45; 
+        doc.setFontSize(11);
+        doc.text("Ваша врожденная психоматрица, рассчитанная по дате рождения:", 20, 50);
+
+        const s = 24;
+        const gridOrder = [[1,4,7],[2,5,8],[3,6,9]];
         doc.setDrawColor(212, 175, 55);
         doc.setLineWidth(0.5);
-        for(let i=0; i<3; i++) {
-            for(let j=0; j<3; j++) doc.rect(37 + j*s, 70 + i*s, s, s);
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) doc.rect(45 + j * s, 58 + i * s, s, s);
         }
-        doc.setFontSize(16);
-        doc.text("111", 55, 95); doc.text("4", 100, 95); doc.text("77", 145, 95);
-        doc.text("22", 55, 140); doc.text("5", 100, 140); doc.text("8", 145, 140);
-        doc.text("3", 55, 185); doc.text("6", 100, 185); doc.text("99", 145, 185);
+        doc.setFontSize(13);
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                const digit = gridOrder[i][j];
+                const count = sq.counts[digit];
+                const cellText = count > 0 ? String(digit).repeat(count) : "—";
+                doc.text(cellText, 45 + j * s + s / 2, 58 + i * s + s / 2 + 2.5, null, null, "center");
+            }
+        }
 
+        doc.setTextColor(212, 175, 55);
+        doc.setFontSize(12);
+        doc.text("Расшифровка качеств:", 20, 150);
+        doc.setDrawColor(212, 175, 55);
+        doc.line(20, 154, 190, 154);
         doc.setFontSize(10);
-        doc.text("Таблица отображает баланс качеств: воля, энергия, интуиция, здоровье и талант.", 105, 230, null, null, "center");
+        let rowY = 162;
+        for (const digit of [1,2,3,4,5,6,7,8,9]) {
+            const count = sq.counts[digit];
+            doc.setTextColor(212, 175, 55);
+            doc.text(String(digit), 22, rowY);
+            doc.setTextColor(0);
+            doc.text(NumEngine.MATRIX_QUALITIES[digit], 32, rowY);
+            doc.text(String(count), 145, rowY, null, null, "center");
+            doc.text(NumEngine.matrixLevelWord(count), 155, rowY);
+            rowY += 12;
+        }
+        y = rowY;
 
-        // --- СТРАНИЦА 4: РАСШИФРОВКА ЛИЧНОСТИ ---
+        // --- СТРАНИЦА: ЧИСЛА ИМЕНИ (ДУША / ЛИЧНОСТЬ / СУДЬБА) ---
         doc.addPage();
-        addHeader("ГЛАВА 3. ПОТЕНЦИАЛ ДУШИ");
-        y = 60;
-        y = addText("Ваш психологический профиль указывает на преобладание творческой энергии над рутинным исполнением. Вы человек идеи, способный видеть возможности там, где другие видят препятствия. Числа в вашей матрице говорят о том, что для вас крайне важно признание ваших заслуг социумом.", y + 10);
-        y = addText("Слабые стороны могут проявляться в периоды энергетических спадов, когда вы склонны к излишней самокритике. Ваша задача — научиться делегировать мелкие задачи и фокусироваться на масштабных целях. Ваша интуиция является вашим главным компасом: если логика говорит одно, а внутреннее чувство другое — доверяйте чувству.", y + 10);
+        addHeader("ГЛАВА 3. ЧИСЛА ИМЕНИ");
+        y = 55;
+        doc.setTextColor(212, 175, 55);
+        doc.setFontSize(13);
+        doc.text(`Число Души: ${nn.soul.value}`, 20, y);
+        y = addText(NumEngine.describe('soul', nn.soul.value), y + 8);
 
-        // --- СТРАНИЦА 5: КАРМА И ЗАДАЧИ ---
+        doc.setTextColor(212, 175, 55);
+        doc.setFontSize(13);
+        doc.text(`Число Личности: ${nn.personality.value}`, 20, y + 6);
+        y = addText(NumEngine.describe('personality', nn.personality.value), y + 14);
+
+        doc.setTextColor(212, 175, 55);
+        doc.setFontSize(13);
+        doc.text(`Число Судьбы: ${nn.destiny.value}`, 20, y + 6);
+        y = addText(NumEngine.describe('destiny', nn.destiny.value), y + 14);
+
+        // --- СТРАНИЦА: КАРМИЧЕСКИЕ ЗАДАЧИ + ПЕРСОНАЛЬНЫЙ ГОД ---
         doc.addPage();
-        addHeader("ГЛАВА 4. КАРМИЧЕСКИЕ ЗАДАЧИ");
-        y = 60;
-        y = addText("Кармический долг в вашей матрице связан с темой ответственности. Возможно, в прошлых воплощениях вы избегали принятия важных решений, поэтому в текущей жизни ситуации будут заставлять вас брать на себя роль лидера.", y + 10);
-        y = addText("Проработка этого узла принесет вам колоссальный приток материальной энергии. Как только вы перестанете бояться ответственности за других, финансовые каналы откроются в полную силу. 2026 год станет идеальным временем для того, чтобы заявить о себе и начать проект, который вы долго откладывали.", y + 10);
+        addHeader("ГЛАВА 4. КАРМА И ПЕРИОД");
+        y = 55;
+        doc.setTextColor(212, 175, 55);
+        doc.setFontSize(13);
+        doc.text("Кармические задачи", 20, y);
+        y += 10;
+        if (karmicNumbers.length > 0) {
+            for (const k of [...new Set(karmicNumbers)]) {
+                y = addText(NumEngine.karmicText(k), y);
+                y += 4;
+            }
+        } else {
+            y = addText("В ваших расчетах не выявлено классических кармических долгов (13, 14, 16, 19) — ваш путь в этом воплощении свободен от тяжелых узлов прошлого.", y);
+            y += 4;
+        }
 
-        // --- СТРАНИЦА 6: ЗАКЛЮЧЕНИЕ ---
+        doc.setTextColor(212, 175, 55);
+        doc.setFontSize(13);
+        doc.text(`Персональный ${currentYear} год: ${py.value}`, 20, y + 8);
+        y = addText(NumEngine.describe('personalYear', py.value), y + 18);
+
+        // --- СТРАНИЦА: ЗАКЛЮЧЕНИЕ ---
         doc.addPage();
         addHeader("ЭПИЛОГ");
         y = 60;
-        y = addText("Этот отчет — лишь начало вашего пути к самопознанию. Нумерология дает карту, но маршрут выбираете вы. Мы рекомендуем перечитывать эти строки в моменты сомнений, чтобы напомнить себе о той огромной силе, которая заложена в вас с первого вздоха.", y + 10);
-        y = addText("Помните: звезды лишь предполагают, но человек, знающий свою природу, способен изменить любой предначертанный сценарий. Мы желаем вам гармонии и процветания на вашем уникальном жизненном пути.", y + 10);
-        
+        y = addText(`Этот отчет — карта, рассчитанная индивидуально по вашим данным: дате рождения и имени «${name}». Число Жизненного Пути ${lp.value}, Число Судьбы ${nn.destiny.value} и персональный год ${py.value} формируют уникальное сочетание, которого нет ни у кого другого.`, y + 10);
+        y = addText("Нумерология дает карту, но маршрут выбираете вы. Мы рекомендуем перечитывать эти строки в моменты сомнений, чтобы напомнить себе о той силе, которая заложена в вас с рождения.", y + 10);
+
         doc.setTextColor(212, 175, 55);
         doc.setFontSize(16);
-        doc.text("СВЕТА ВАШЕМУ ПУТИ", 105, 200, null, null, "center");
+        doc.text("СВЕТА ВАШЕМУ ПУТИ", 105, 220, null, null, "center");
 
         doc.save(`Aura_Book_${name}.pdf`);
     }
